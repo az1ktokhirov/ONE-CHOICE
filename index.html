@@ -7,6 +7,98 @@
     <meta http-equiv="Permissions-Policy" content="unload=(), beforeunload=()">
     <title>ONE CHOICE: LIFE COLLAPSE</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- CRITICAL: Console suppression MUST run FIRST to catch browser extension violations -->
+    <script>
+        (function() {
+            'use strict';
+            // Store original console methods immediately - before any extensions can interfere
+            var _originalConsole = {
+                error: console.error,
+                warn: console.warn,
+                log: console.log,
+                info: console.info || console.log,
+                debug: console.debug || console.log,
+                trace: console.trace || console.log
+            };
+            
+            // Enhanced message filter - catches all violation variations (case-insensitive)
+            function shouldSuppressMessage(msg) {
+                if (typeof msg !== 'string') {
+                    msg = String(msg);
+                }
+                var msgLower = msg.toLowerCase();
+                
+                return msgLower.includes('violation') ||
+                       msgLower.includes('inspector') ||
+                       msgLower.includes('vm') ||
+                       msgLower.includes('unload') ||
+                       msgLower.includes('beforeunload') ||
+                       msgLower.includes('permissions policy') ||
+                       msgLower.includes('csspeeper') ||
+                       msgLower.includes('payload') ||
+                       msgLower.includes('ad unit initialization failed') ||
+                       msg.includes('inspector.b9415ea5') ||
+                       msg.includes('VM');
+            }
+            
+            // Intercept all console methods immediately and lock them
+            ['error', 'warn', 'log', 'info', 'debug', 'trace'].forEach(function(method) {
+                if (_originalConsole[method]) {
+                    var wrappedMethod = function() {
+                        var args = Array.prototype.slice.call(arguments);
+                        var message = args.map(function(arg) {
+                            return typeof arg === 'string' ? arg : JSON.stringify(arg);
+                        }).join(' ');
+                        
+                        // #region agent log
+                        if (message.includes('Violation') || message.includes('inspector') || message.includes('unload') || message.includes('VM')) {
+                            fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:console.'+method,message:'Console method called',data:{method:method,message:message.substring(0,300),willSuppress:shouldSuppressMessage(message)},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'B'})}).catch(()=>{});
+                        }
+                        // #endregion
+                        
+                        if (shouldSuppressMessage(message)) {
+                            return; // Suppress the message completely
+                        }
+                        
+                        _originalConsole[method].apply(console, args);
+                    };
+                    
+                    // Assign the wrapped method
+                    console[method] = wrappedMethod;
+                    
+                    // Try to lock it using defineProperty to prevent extensions from overriding
+                    try {
+                        Object.defineProperty(console, method, {
+                            value: wrappedMethod,
+                            writable: false,
+                            configurable: false
+                        });
+                    } catch(e) {
+                        // If we can't lock it, at least we have the wrapper
+                    }
+                }
+            });
+            
+            // Try to intercept via PerformanceObserver for violations that bypass console
+            try {
+                if (window.PerformanceObserver) {
+                    var obs = new PerformanceObserver(function(list) {
+                        list.getEntries().forEach(function(entry) {
+                            if (entry.name && (entry.name.includes('violation') || entry.name.includes('unload'))) {
+                                // #region agent log
+                                fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:PerformanceObserver',message:'Performance violation detected',data:{entryName:entry.name,entryType:entry.entryType},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'E'})}).catch(()=>{});
+                                // #endregion
+                            }
+                        });
+                    });
+                    try {
+                        obs.observe({entryTypes: ['measure', 'mark', 'navigation']});
+                    } catch(e) {}
+                }
+            } catch(e) {}
+        })();
+    </script>
 </head>
 <body>
     <!-- Главное меню -->
@@ -230,6 +322,51 @@
     </div>
 
 
+    <!-- Admin Panel (Hidden) -->
+    <div id="admin-login-screen" class="hidden">
+        <div class="admin-login-content">
+            <h2 id="admin-login-title">Admin Login</h2>
+            <input type="text" id="admin-login-input" placeholder="Login" autocomplete="off">
+            <input type="password" id="admin-password-input" placeholder="Password" autocomplete="off">
+            <button id="admin-login-btn" class="primary-btn">Login</button>
+            <div id="admin-login-error" class="admin-error hidden"></div>
+            <button id="admin-login-back-btn" class="back-btn">Back</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="admin-panel-content">
+            <div class="admin-header">
+                <h2 id="admin-panel-title">ADMIN PANEL</h2>
+                <div id="admin-mode-indicator" class="admin-mode-indicator">ADMIN MODE</div>
+                <button id="admin-exit-btn" class="back-btn">Exit</button>
+            </div>
+            
+            <div class="admin-section">
+                <h3 id="admin-difficulty-title">Difficulty Override</h3>
+                <div class="admin-difficulty-options">
+                    <button class="admin-difficulty-btn" data-difficulty="easy">Easy</button>
+                    <button class="admin-difficulty-btn" data-difficulty="normal">Normal</button>
+                    <button class="admin-difficulty-btn" data-difficulty="hard">Hard</button>
+                </div>
+                <div id="admin-selected-difficulty" class="admin-selected"></div>
+            </div>
+
+            <div class="admin-section">
+                <h3 id="admin-endings-title">Force Endings</h3>
+                <div id="admin-endings-list" class="admin-endings-grid"></div>
+            </div>
+
+            <div class="admin-section">
+                <h3 id="admin-scene-title">Scene Jump (Optional)</h3>
+                <div class="admin-scene-controls">
+                    <input type="number" id="admin-scene-id-input" placeholder="Scene ID" min="1">
+                    <button id="admin-jump-scene-btn" class="secondary-btn">Jump to Scene</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Игровые модули (загружаем до SDK) -->
     <script src="engine/stats.js"></script>
     <script src="engine/sceneManager.js"></script>
@@ -271,6 +408,10 @@
         
         // Подавление ошибок от расширений браузера (выполняется ДО загрузки других скриптов)
         (function() {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:317',message:'Console suppression setup started',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            
             var originalError = console.error;
             var originalWarn = console.warn;
             var originalLog = console.log;
@@ -281,58 +422,73 @@
                     message = String(message);
                 }
                 
-                return message.includes('csspeeper') ||
-                    message.includes('inspector') ||
+                // Check for violation warnings (browser-level warnings)
+                var isViolation = message.includes('[Violation]');
+                var hasInspector = message.includes('inspector') || message.includes('VM');
+                var hasUnload = message.includes('unload') || message.includes('beforeunload');
+                var hasPermissions = message.includes('Permissions policy');
+                
+                var shouldIgnore = message.includes('csspeeper') ||
+                    hasInspector ||
                     message.includes('payload') ||
                     message.includes('Ad unit initialization failed') ||
-                    message.includes('Permissions policy violation') ||
-                    message.includes('Permissions policy') ||
-                    message.includes('unload') ||
-                    message.includes('beforeunload') ||
+                    hasPermissions ||
+                    hasUnload ||
                     message.includes('VM') ||
-                    message.includes('[Violation]') ||
+                    isViolation ||
                     message.includes('inspector.b9415ea5');
+                
+                // #region agent log
+                if (isViolation || hasInspector || hasUnload || hasPermissions) {
+                    fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:324',message:'shouldIgnoreMessage check',data:{message:message.substring(0,200),shouldIgnore:shouldIgnore,isViolation:isViolation,hasInspector:hasInspector,hasUnload:hasUnload},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+                }
+                // #endregion
+                
+                return shouldIgnore;
             }
             
-            console.error = function() {
-                var args = Array.prototype.slice.call(arguments);
-                var message = args.map(function(arg) {
-                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
-                }).join(' ');
-                
-                if (shouldIgnoreMessage(message)) {
-                    return;
+            // Intercept console methods that might be used for violations
+            // Some browsers log violations via console methods we haven't intercepted
+            var consoleMethods = ['error', 'warn', 'log', 'info', 'debug', 'trace'];
+            var originalMethods = {};
+            consoleMethods.forEach(function(method) {
+                if (console[method] && typeof console[method] === 'function') {
+                    originalMethods[method] = console[method];
                 }
-                
-                originalError.apply(console, args);
-            };
+            });
             
-            console.warn = function() {
-                var args = Array.prototype.slice.call(arguments);
-                var message = args.map(function(arg) {
-                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
-                }).join(' ');
-                
-                if (shouldIgnoreMessage(message)) {
-                    return;
+            // Intercept all console methods dynamically
+            consoleMethods.forEach(function(method) {
+                if (originalMethods[method]) {
+                    console[method] = function() {
+                        var args = Array.prototype.slice.call(arguments);
+                        var message = args.map(function(arg) {
+                            return typeof arg === 'string' ? arg : JSON.stringify(arg);
+                        }).join(' ');
+                        
+                        // #region agent log
+                        if (message.includes('inspector') || message.includes('unload') || message.includes('Violation') || message.includes('VM')) {
+                            fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:console.'+method,message:'console.'+method+' called',data:{message:message.substring(0,200),willIgnore:shouldIgnoreMessage(message),method:method},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+                        }
+                        // #endregion
+                        
+                        if (shouldIgnoreMessage(message)) {
+                            return;
+                        }
+                        
+                        originalMethods[method].apply(console, args);
+                    };
                 }
-                
-                originalWarn.apply(console, args);
-            };
+            });
             
-            // Также фильтруем console.log для VM скриптов
-            console.log = function() {
-                var args = Array.prototype.slice.call(arguments);
-                var message = args.map(function(arg) {
-                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
-                }).join(' ');
-                
-                if (shouldIgnoreMessage(message)) {
-                    return;
-                }
-                
-                originalLog.apply(console, args);
-            };
+            // Keep backward compatibility with explicit assignments
+            console.error = console.error || originalMethods.error;
+            console.warn = console.warn || originalMethods.warn;
+            console.log = console.log || originalMethods.log;
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/9e007a5c-7eeb-4b55-bd91-9bc2438d0a2b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:388',message:'Console suppression setup completed',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
         })();
     </script>
     
