@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="ONE CHOICE: LIFE COLLAPSE - Психологическая игра-выбор">
+    <meta http-equiv="Permissions-Policy" content="unload=(), beforeunload=()">
+    <title>ONE CHOICE: LIFE COLLAPSE</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Главное меню -->
+    <div id="main-menu">
+        <div class="menu-background">
+            <div id="background-phrase" class="background-phrase"></div>
+        </div>
+        <div class="menu-content">
+            <div class="menu-title">
+                <h1>ONE CHOICE</h1>
+                <h2>LIFE COLLAPSE</h2>
+                <p class="subtitle" id="menu-subtitle">Каждое решение что-то ломает.</p>
+            </div>
+            
+            <div class="menu-buttons">
+                <button id="start-btn" class="primary-btn">НАЧАТЬ</button>
+                <div id="returning-player-info" class="returning-info hidden"></div>
+                
+                <div id="daily-banner" class="daily-banner hidden">
+                    <span id="daily-banner-text"></span>
+                </div>
+                
+                <div class="secondary-buttons">
+                    <button id="difficulty-btn" class="secondary-btn"><span id="difficulty-btn-text">Сложность</span></button>
+                    <button id="stats-btn" class="secondary-btn"><span id="stats-btn-text">Статистика</span></button>
+                    <button id="endings-btn" class="secondary-btn"><span id="endings-btn-text">Концовки</span></button>
+                    <button id="sound-menu-btn" class="secondary-btn"><span id="sound-btn-text">Звук</span>: <span id="sound-status">ВКЛ</span></button>
+                    <button id="language-btn" class="secondary-btn"><span id="language-btn-text">Язык</span></button>
+                </div>
+                
+                <div class="insight-display">
+                    <span id="insight-label">ОСОЗНАНИЕ:</span>
+                    <span id="insight-value">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран выбора сложности -->
+    <div id="difficulty-screen" class="hidden">
+        <div class="screen-content">
+            <h2>Сложность</h2>
+            <div class="difficulty-options">
+                <button class="difficulty-option" data-difficulty="easy">
+                    <div class="difficulty-title">ЛЁГКО</div>
+                    <div class="difficulty-desc">Меньше давления.<br>Больше пространства для ошибок.</div>
+                </button>
+                <button class="difficulty-option active" data-difficulty="normal">
+                    <div class="difficulty-title">НОРМАЛЬНО</div>
+                    <div class="difficulty-desc">Как задумано.<br>Ошибки имеют цену.</div>
+                </button>
+                <button class="difficulty-option" data-difficulty="hard">
+                    <div class="difficulty-title">ЖЁСТКО</div>
+                    <div class="difficulty-desc">Быстро.<br>Больно.<br>Без права на ошибку.</div>
+                </button>
+            </div>
+            <button id="difficulty-back-btn" class="back-btn">Назад</button>
+        </div>
+    </div>
+
+    <!-- Экран статистики -->
+    <div id="stats-screen" class="hidden">
+        <div class="screen-content">
+            <h2 id="stats-title">Статистика</h2>
+            <div class="stats-content">
+                <div class="stat-item">
+                    <span class="stat-label" id="stats-total-runs">Всего запусков:</span>
+                    <span id="total-runs" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" id="stats-best-result">Лучший результат:</span>
+                    <span id="best-result" class="stat-value">0 решений</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" id="stats-common-failure">Частая причина провала:</span>
+                    <span id="common-failure" class="stat-value">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" id="stats-last-difficulty">Последняя сложность:</span>
+                    <span id="last-difficulty" class="stat-value">НОРМАЛЬНО</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" id="stats-unlocked-endings">Разблокировано концовок:</span>
+                    <span id="unlocked-endings-count" class="stat-value">0</span>
+                </div>
+            </div>
+            <button id="stats-back-btn" class="back-btn" data-text="Назад">Назад</button>
+        </div>
+    </div>
+
+    <!-- Экран концовок -->
+    <div id="endings-screen" class="hidden">
+        <div class="screen-content endings-screen-content">
+            <div class="endings-header">
+                <h2 id="endings-title">Концовки</h2>
+                <button id="endings-back-btn" class="back-btn" data-text="Назад">Назад</button>
+            </div>
+            <div id="endings-list-container" class="endings-list-container">
+                <div id="endings-list" class="endings-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран выбора языка -->
+    <div id="language-screen" class="hidden">
+        <div class="screen-content">
+            <h2 id="language-title">Язык</h2>
+            <div class="language-options">
+                <button class="language-option active" data-language="ru">
+                    <div class="language-name">Русский</div>
+                </button>
+                <button class="language-option" data-language="en">
+                    <div class="language-name">English</div>
+                </button>
+            </div>
+            <button id="language-back-btn" class="back-btn" data-text="Назад">Назад</button>
+        </div>
+    </div>
+
+    <!-- Экран первого запуска -->
+    <div id="first-time-message" class="hidden">
+        <div class="message-content">
+            <p id="first-time-quote">Хороших решений не существует.</p>
+        </div>
+    </div>
+
+    <!-- Модификатор перед запуском -->
+    <div id="modifier-announcement" class="hidden">
+        <div class="modifier-content">
+            <h3 id="modifier-title">Активный модификатор</h3>
+            <div id="modifier-name" class="modifier-name"></div>
+            <div id="modifier-description" class="modifier-description"></div>
+            <button id="modifier-continue-btn" class="primary-btn" data-text="Продолжить">Продолжить</button>
+        </div>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <!-- Статистика -->
+        <div id="stats-panel">
+            <div class="stat-bar-container">
+                <div class="stat-label">Разум</div>
+                <div class="stat-bar">
+                    <div id="stat-mind" class="stat-fill" data-stat="mind" style="width: 100%;"></div>
+                </div>
+                <span class="stat-value" id="value-mind">100</span>
+            </div>
+            <div class="stat-bar-container">
+                <div class="stat-label">Сердце</div>
+                <div class="stat-bar">
+                    <div id="stat-heart" class="stat-fill" data-stat="heart" style="width: 100%;"></div>
+                </div>
+                <span class="stat-value" id="value-heart">100</span>
+            </div>
+            <div class="stat-bar-container">
+                <div class="stat-label">Время</div>
+                <div class="stat-bar">
+                    <div id="stat-time" class="stat-fill" data-stat="time" style="width: 100%;"></div>
+                </div>
+                <span class="stat-value" id="value-time">100</span>
+            </div>
+            <div class="stat-bar-container">
+                <div class="stat-label">Движение</div>
+                <div class="stat-bar">
+                    <div id="stat-drive" class="stat-fill" data-stat="drive" style="width: 100%;"></div>
+                </div>
+                <span class="stat-value" id="value-drive">100</span>
+            </div>
+        </div>
+
+        <!-- Игровая область -->
+        <div id="game-area">
+            <div id="situation-text"></div>
+            <div id="choices-container">
+                <button class="choice-btn" id="choice-1"></button>
+                <button class="choice-btn" id="choice-2"></button>
+            </div>
+        </div>
+
+        <!-- Счетчик решений -->
+        <div id="progress-info">
+            <span id="choices-count">Решений: 0</span>
+            <span id="score-display">Счет: 0</span>
+        </div>
+
+        <!-- Настройки -->
+        <div id="settings-panel">
+            <button id="sound-toggle" class="icon-btn" title="Звук">🔊</button>
+        </div>
+    </div>
+
+    <!-- Экран окончания игры -->
+    <div id="game-over-screen" class="hidden">
+        <div class="game-over-content">
+            <h1>КОЛЛАПС</h1>
+            <div id="collapse-reason"></div>
+            <div class="stats-summary">
+                <div class="summary-item">
+                    <span class="summary-label" id="final-score-label">Счет:</span>
+                    <span id="final-score">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" id="final-choices-label">Решений:</span>
+                    <span id="final-choices">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label" id="percentile-label">Выжили дольше:</span>
+                    <span id="percentile">0%</span>
+                </div>
+            </div>
+            <div id="ending-type"></div>
+            <div id="insight-earned" class="insight-earned hidden">
+                <span id="insight-earned-label">Получено ОСОЗНАНИЕ:</span>
+                <span id="insight-earned-value">0</span>
+            </div>
+            <div class="game-over-buttons">
+                <button id="revive-ad-btn" class="action-btn" data-text="Восстановить (Реклама)">Восстановить (Реклама)</button>
+                <button id="restart-btn" class="action-btn" data-text="В меню">В меню</button>
+            </div>
+            <div id="restart-quote" class="restart-quote"></div>
+        </div>
+    </div>
+
+
+    <!-- Игровые модули (загружаем до SDK) -->
+    <script src="engine/stats.js"></script>
+    <script src="engine/sceneManager.js"></script>
+    <script src="engine/environmentDetector.js"></script>
+    <script src="engine/adManager.js"></script>
+    <script src="engine/insightManager.js"></script>
+    <script src="engine/modifierManager.js"></script>
+    <script src="engine/endingsManager.js"></script>
+    <script src="engine/dailyRunManager.js"></script>
+    <script src="engine/quotesManager.js"></script>
+    <script src="engine/languageManager.js"></script>
+    
+    <!-- Yandex Games SDK (опционально, загружается только если доступен) -->
+    <script>
+        // Безопасная загрузка SDK только если мы в правильном окружении
+        (function() {
+            try {
+                // Проверяем, что мы в iframe и есть parent
+                var isInIframe = window.self !== window.top;
+                var hasParent = window.parent && window.parent !== window;
+                
+                // Загружаем SDK только если есть признаки Yandex Games окружения
+                if (isInIframe && hasParent && (window.location.search.includes('appId') || typeof YaGames !== 'undefined')) {
+                    var script = document.createElement('script');
+                    script.src = 'https://yandex.ru/games/sdk/v2';
+                    script.async = true;
+                    script.onerror = function() {
+                        // Молча игнорируем ошибки загрузки
+                    };
+                    script.onload = function() {
+                        // SDK загружен успешно
+                    };
+                    document.head.appendChild(script);
+                }
+            } catch (e) {
+                // Молча игнорируем все ошибки
+            }
+        })();
+        
+        // Подавление ошибок от расширений браузера (выполняется ДО загрузки других скриптов)
+        (function() {
+            var originalError = console.error;
+            var originalWarn = console.warn;
+            var originalLog = console.log;
+            
+            // Функция проверки, нужно ли игнорировать сообщение
+            function shouldIgnoreMessage(message) {
+                if (typeof message !== 'string') {
+                    message = String(message);
+                }
+                
+                return message.includes('csspeeper') ||
+                    message.includes('inspector') ||
+                    message.includes('payload') ||
+                    message.includes('Ad unit initialization failed') ||
+                    message.includes('Permissions policy violation') ||
+                    message.includes('Permissions policy') ||
+                    message.includes('unload') ||
+                    message.includes('beforeunload') ||
+                    message.includes('VM') ||
+                    message.includes('[Violation]') ||
+                    message.includes('inspector.b9415ea5');
+            }
+            
+            console.error = function() {
+                var args = Array.prototype.slice.call(arguments);
+                var message = args.map(function(arg) {
+                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
+                }).join(' ');
+                
+                if (shouldIgnoreMessage(message)) {
+                    return;
+                }
+                
+                originalError.apply(console, args);
+            };
+            
+            console.warn = function() {
+                var args = Array.prototype.slice.call(arguments);
+                var message = args.map(function(arg) {
+                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
+                }).join(' ');
+                
+                if (shouldIgnoreMessage(message)) {
+                    return;
+                }
+                
+                originalWarn.apply(console, args);
+            };
+            
+            // Также фильтруем console.log для VM скриптов
+            console.log = function() {
+                var args = Array.prototype.slice.call(arguments);
+                var message = args.map(function(arg) {
+                    return typeof arg === 'string' ? arg : JSON.stringify(arg);
+                }).join(' ');
+                
+                if (shouldIgnoreMessage(message)) {
+                    return;
+                }
+                
+                originalLog.apply(console, args);
+            };
+        })();
+    </script>
+    
+    <!-- Основной игровой файл -->
+    <script src="main.js"></script>
+</body>
+</html>
+
